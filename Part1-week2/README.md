@@ -104,8 +104,135 @@ public class ResizingArrayStackOfStrings {
 
 ![2](imgs/2.png)
 
-内存用量在 8N 到 32N 之间。
+当栈慢时，内存空间为 sizeOf(int) * N = 8N 个字节；当栈的元素个数占总内存空间的 1/4 时，它包括 8 个 int 类型的地址，3*8N 个无用的空间，所以消耗内存 32N 个字节。
+
+数组实现的栈内存占有在 8N 到 32N 之间。
 
 #### 动态数组 vs. 链表
 
+虽然两种实现方式时间和空间复杂度近似相等，可还是有所差异。
 
+在课程讨论区一位 mentor 就做过这样的解释。对于内存分析，链表耗内存的关键在于每个节点要存储两部分，假如说要存储32位的整数，那么链表实现要包含32位的整数和32位的地址，空间复杂度就是 O(64n bits)；而数组只需要考虑一次开辟数组的内存，整个的内存消耗也就是 O(32n + 32 bits)，虽然可以看做同一量级的复杂度，但实际上常数不一样，下面的网站可以很好地体现：
+
+https://www.desmos.com/calculator/0gvfaytclt
+
+时间复杂度链表要稳定一些，因为它每次操作都是 O(1)，而数组虽然总体来讲要快一点，但可能需要 resize()，造成不稳定因素。老爷子也举例子说，如果要进行飞机降落，每一个环节都不能出错，或是数据传输，不能因为某一时刻速度减慢而造成丢包，那么使用链表是更好地选择。
+
+### 队列
+
+下面是队列的 API：
+
+![3](imgs/3.png)
+
+#### 链表实现
+
+```java
+public class LinkedQueueOfStrings {
+    private Node first, last;
+    
+    private class Node {
+        String item;
+        Node next;
+    }
+    
+    public boolean isEmpty() {
+        return first == null;
+    }
+    
+    public void enqueue(String item) {
+        Node oldlast = last;
+        last = new Node();
+        last.item = item;
+        last.next = null;
+        if (isEmpty())
+            first = last;
+        else
+            oldlast.next = last;
+    }
+    
+    public String dequeue() {
+        String item = first.item;
+        first = first.next;
+        if (isEmpty())
+            last = null;
+        return item;
+    }
+}
+```
+
+
+### 泛型和迭代器
+
+实现一个数据结构很自然要引入泛型，这里着重强调了 Java 不能创建泛型数组，所以使用强制转换来解决这一问题：
+
+```java
+s = (Item[]) new Object[capacity];
+```
+
+虽然老爷子强调"A good code has zero cast"，不过这也是不得已而为之。
+
+迭代器有利于数据结构的迭代，而且可以使用 Java 的 for-each 方法。下面是两种链表的 iterator 的实现：
+
+```java
+public class Stack<Item> implements Iterable<Item> {
+    ...
+    public Iterator<Item> iterator() {
+        return new ListIterator();
+    }
+    
+    private class ListIterator implements Iterator<Item> {
+        private Node current = first;
+        
+        public boolean hasNext() {
+            return current != null;
+        }
+        
+        public void remove() {
+            /* not support */
+        }
+        
+        public Item next() {
+            Item item = current.item;
+            current = item.next;
+            return item;
+        }
+    }
+}
+```
+
+```java
+public class Stack<Item> implements Iterable<Item> {
+    ...
+    public Iterator<Item> iterator() {
+        return new ReverseArrayIterator();
+    }
+    
+    private class ReverseArrayIterator implements Iterator<Item> {
+        private int i = N;
+        
+        public boolean hasNext() {
+            return i > 0;
+        }
+        
+        public void remove() {
+            /* not support */
+        }
+        
+        public Item next() {
+            return s[--i];
+        }
+    }
+}
+```
+
+### 栈和队列的应用
+
+其实讲的还是栈的应用，列举了下面几点：
+
+* 编译器中的解析器
+* Java 虚拟机
+* word 中的撤销操作
+* 浏览器中的后退键
+* 函数调用
+
+又详细讲了算数表达式求值的 Dijkstra 的双栈算法。
