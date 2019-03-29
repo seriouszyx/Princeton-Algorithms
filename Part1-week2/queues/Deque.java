@@ -1,4 +1,8 @@
+import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.StdRandom;
+
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * @description: A double-ended queue
@@ -21,7 +25,8 @@ public class Deque<Item> implements Iterable<Item> {
      */
     public Deque() {
         first = new Node();
-        first.next = first.prev = first;
+        first.next = first;
+        first.prev = first;
     }
 
     /**
@@ -29,7 +34,7 @@ public class Deque<Item> implements Iterable<Item> {
      * @return
      */
     public boolean isEmpty() {
-        return first.next == first.prev;
+        return size == 0;
     }
 
     /**
@@ -45,6 +50,8 @@ public class Deque<Item> implements Iterable<Item> {
      * @param item
      */
     public void addFirst(Item item) {
+        if (item == null)
+            throw new IllegalArgumentException();
         Node lastfirst = first.next;
         first.next = new Node();
         first.next.value = item;
@@ -59,6 +66,8 @@ public class Deque<Item> implements Iterable<Item> {
      * @param item
      */
     public void addLast(Item item) {
+        if (item == null)
+            throw new IllegalArgumentException();
         Node lastrear = first.prev;
         first.prev = new Node();
         first.prev.value = item;
@@ -73,6 +82,8 @@ public class Deque<Item> implements Iterable<Item> {
      * @return
      */
     public Item removeFirst() {
+        if (isEmpty())
+            throw new NoSuchElementException();
         Node nextfirst = first.next.next;
         Item item = first.next.value;
         first.next = nextfirst;
@@ -86,6 +97,8 @@ public class Deque<Item> implements Iterable<Item> {
      * @return
      */
     public Item removeLast() {
+        if (isEmpty())
+            throw new NoSuchElementException();
         Node nextlast = first.prev.prev;
         Item item = first.prev.value;
         first.prev = nextlast;
@@ -114,10 +127,34 @@ public class Deque<Item> implements Iterable<Item> {
 
         @Override
         public Item next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
             Item item = current.value;
             current = current.next;
             return item;
         }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static void main(String[] args) {
+
+        Deque<Integer> deque = new Deque<>();
+        Queue<Integer> std = new Queue<>();
+        for (int i = 0; i < 1000; i++) {
+            int n = StdRandom.uniform(1000);
+            deque.addLast(n);
+            std.enqueue(n);
+        }
+        for (int i = 0; i < 1000; i++) {
+            if (!deque.removeFirst().equals(std.dequeue()))
+                System.out.println(i);
+        }
+
+
     }
 }
 

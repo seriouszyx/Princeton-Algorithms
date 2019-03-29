@@ -1,3 +1,5 @@
+import edu.princeton.cs.algs4.StdIn;
+
 /**
  * @description:
  * @author: seriouszyx
@@ -6,27 +8,15 @@
 public class Permutation {
 
     public static void main(String[] args) {
-
-        Deque<Integer> deque = new Deque<>();
-        System.out.println(deque.isEmpty());
-        deque.addFirst(2);
-        deque.addFirst(1);
-        deque.addLast(3);
-        deque.addLast(4);
-        for (Integer i : deque) {
-            System.out.print(i + " ");
+        RandomizedQueue<String> rq = new RandomizedQueue<>();
+        int num = Integer.parseInt(args[0]);
+        while (!StdIn.isEmpty()) {
+            String s = StdIn.readString();
+            rq.enqueue(s);
         }
-        System.out.println();
-        System.out.println(deque.isEmpty());
-        System.out.println(deque.size());
 
-        System.out.println(deque.removeFirst());
-        System.out.println(deque.removeLast());
-        System.out.println(deque.isEmpty());
-        System.out.println(deque.size());
-
-        for (Integer i : deque) {
-            System.out.print(i + " ");
+        for (int i = 0; i < num; i++) {
+            System.out.println(rq.dequeue());
         }
 
     }
