@@ -98,3 +98,47 @@ Arrays.sort(a, Student.BY_NAME);
 
 使用 Comparator 接口来替代 Comparable 接口的优点就是它支持待排序元素的多种排序规则。
 
+## 快速排序
+
+快速排序广泛运用于系统排序和其他应用中。它也是一个递归过程，与归并排序不同的是，它先进行操作然后再递归，而不是归并排序先进性递归然后再进行 merge。
+
+算法的思想是先对数组随机打乱，然后每次都把第一个元素放到合适的位置，这个位置左边的元素都比它小，右边的元素都比它大，再将两侧的元素递归操作。
+
+```java
+private static int partition(Comparable[] a, int lo, int hi) {
+    int i = lo, j = hi + 1;
+    while (true) {
+        while (less(a[++i], a[lo]))
+            if (i == hi)
+                break;
+        while (less(a[lo], a[--j]))
+            if (j == lo)
+                break;
+        if (i >= j)
+            break;
+        exch(a, i, j);
+    }
+    exch(a, lo, j);
+    return j;
+}
+
+public static void sort(Comparable[] a) {
+    StdRandom.shuffle(a);
+    sort(a, 0, a.length - 1);
+}
+
+private static void sort(Comparable[] a, int lo, int hi) {
+    if (hi <= lo)
+        return;
+    int j = partition(a, lo, hi);
+    sort(a, lo, j - 1);
+    sort(a, j + 1, hi);
+}
+```
+
+事实证明，快速排序比归并排序还要快，他最少需要 NlgN 次比较，最多需要 1/2 N^2 次。对于 N 个元素，快速排序平均需要 1.39NlgN 次比较，不过因为不需要过多的元素的移动，所以实际上它更快一些。其中，随机打乱是为了避免最坏的情况。
+
+在空间使用上，它不需要额外的空间，所以是常数级别的。
+
+
+
