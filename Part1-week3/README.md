@@ -140,5 +140,34 @@ private static void sort(Comparable[] a, int lo, int hi) {
 
 在空间使用上，它不需要额外的空间，所以是常数级别的。
 
+### 案例
 
+快速排序的一个案例是找一个数组中第 k 大的数。
+
+```java
+public static Comparable select(Comparable[] a, int k) {
+    StdRandom.shuffle(a);
+    int lo = 0, hi = a.length - 1;
+    while (hi > lo) {
+        int j = partition(a, lo, hi);
+        if (j < k)
+            lo = j + 1;
+        else if (j > k)
+            hi = j - 1;
+        else
+            return a[k];
+    }
+    return a[k];
+}
+```
+
+这个解法的时间复杂度是线性的，不过有论文表明它的常数很大，所以在实践中效果不是特别好。
+
+### 多个相同键值
+
+很多时候排序的目的是将相同键值的元素排到一起，处理这种问题不同的排序方法的效率也不同。
+
+归并排序需要 1/2 NlgN 至 NlgN 次比较。
+
+快速排序将达到 N^2 除非 partition 过程停止的键值和结果键值相等，所以需要更好的算法实现，比较好的一种算法是 Dijkstra 三分法：
 
