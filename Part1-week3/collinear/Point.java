@@ -8,8 +8,10 @@
  *
  ******************************************************************************/
 
-import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
+
+import java.util.Comparator;
+import java.util.NoSuchElementException;
 
 public class Point implements Comparable<Point> {
 
@@ -60,6 +62,17 @@ public class Point implements Comparable<Point> {
      */
     public double slopeTo(Point that) {
         /* YOUR CODE HERE */
+        if (that == null)
+            throw new NoSuchElementException();
+        if (this.x == that.x && this.y == that.y)
+            return Double.NEGATIVE_INFINITY;
+        else if (this.x == that.x)
+            return Double.POSITIVE_INFINITY;
+        else if (this.y == that.y)
+            return +0;
+        else
+            return (this.y - that.y) * 1.0 / (this.x - that.x);
+
     }
 
     /**
@@ -76,6 +89,13 @@ public class Point implements Comparable<Point> {
      */
     public int compareTo(Point that) {
         /* YOUR CODE HERE */
+        if (that == null)
+            throw new NoSuchElementException();
+        if (this.x == that.x && this.y == that.y)
+            return 0;
+        if (this.y < that.y || (this.y == that.y && this.x < that.x))
+            return -1;
+        return 1;
     }
 
     /**
@@ -86,6 +106,26 @@ public class Point implements Comparable<Point> {
      */
     public Comparator<Point> slopeOrder() {
         /* YOUR CODE HERE */
+        return new SlopeCompare();
+    }
+
+    private class SlopeCompare implements Comparator<Point> {
+
+        @Override
+        public int compare(Point o1, Point o2) {
+            if (o1 == null || o2 == null)
+                throw new NoSuchElementException();
+            if (slopeTo(o1) == Double.NEGATIVE_INFINITY && slopeTo(o2) == Double.NEGATIVE_INFINITY)
+                return 0;
+            else if (slopeTo(o1) == Double.POSITIVE_INFINITY && slopeTo(o2) == Double.POSITIVE_INFINITY)
+                return 0;
+            else if (slopeTo(o1) == Double.POSITIVE_INFINITY && slopeTo(o2) == Double.NEGATIVE_INFINITY)
+                return -1;
+            else if (slopeTo(o1) == Double.NEGATIVE_INFINITY && slopeTo(o2) == Double.POSITIVE_INFINITY)
+                return 1;
+            else
+                return slopeTo(o1) - slopeTo(o2) < 0 ? -1 : 1;
+        }
     }
 
 
@@ -106,5 +146,10 @@ public class Point implements Comparable<Point> {
      */
     public static void main(String[] args) {
         /* YOUR CODE HERE */
+        Point p1 = new Point(0, 10);
+        Point p2 = new Point(10, 0);
+        System.out.println(p1.slopeTo(p2) == p2.slopeTo(p1));
+        Point p3 = new Point(0, 20);
+        System.out.println(p3.slopeOrder().compare(p1, p2));
     }
 }

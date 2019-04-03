@@ -171,3 +171,9 @@ public static Comparable select(Comparable[] a, int k) {
 
 快速排序将达到 N^2 除非 partition 过程停止的键值和结果键值相等，所以需要更好的算法实现，比较好的一种算法是 Dijkstra 三分法：
 
+
+## 编程作业：模式识别
+
+给 n 个不同的点，找出所连最长的线段，每条线段至少包括四个点。
+
+
