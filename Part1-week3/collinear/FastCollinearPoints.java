@@ -44,15 +44,15 @@ public class FastCollinearPoints {
             Arrays.sort(points);
             Point min = points[i];
             /** sort as the points' slope */
-            Arrays.sort(points, i, points.length, points[i].slopeOrder());
+            Arrays.sort(points, i, N, points[i].slopeOrder());
 
             Point max = null;
             int count = 0;
 
             for (int j = i + 1; j < N - 1; j++) {
-                if (min.slopeTo(points[j]) == min.slopeTo(points[i + 2])) {
+                if (min.slopeTo(points[j]) == min.slopeTo(points[j + 1])) {
                     count++;
-                    max = points[i + 2];
+                    max = points[j + 1];
                 } else if (count != 2) {
                     count = 0;
                 }
@@ -77,8 +77,12 @@ public class FastCollinearPoints {
      * the line segments
      * @return
      */
-    public ArrayList<LineSegment> segments() {
-        return list;
+    public LineSegment[] segments() {
+        LineSegment[] ans = new LineSegment[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            ans[i] = list.get(i);
+        }
+        return ans;
     }
 
     public static void main(String[] args) {
