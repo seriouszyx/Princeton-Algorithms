@@ -169,9 +169,45 @@ public static Comparable select(Comparable[] a, int k) {
 
 归并排序需要 1/2 NlgN 至 NlgN 次比较。
 
-快速排序将达到 N^2 除非 partition 过程停止的键值和结果键值相等，所以需要更好的算法实现，比较好的一种算法是 Dijkstra 三分法：
+快速排序将达到 N^2 除非 partition 过程停止的键值和结果键值相等，所以需要更好的算法实现.
 
+比较好的一种算法是 Dijkstra 三向切分，它将数组分成了三个部分，是 Dijkstra 的荷兰国旗问题引发的一个思考，即使用三种不同的主键对数组进行排序。
 
+```java
+private static void sort(Comparable[] a, int lo, int hi) {
+    if (hi <= lo)
+        return;
+    int lt = lo, gt = hi;
+    Comparable v = a[lo];
+    int i = lo;
+    while (i <= gt) {
+        int cmp = a[i].compareTo(v);
+        if (cmp < 0)
+            exch(a, lt++, i++);
+        else if (cmp > 0)
+            exch(a, i, gt--);
+        else
+            i++;
+    }
+    
+    sort(a, lo, lt - 1);
+    sort(a, gt + 1, hi);
+}
+```
+
+对于包含大量重复元素的数组，它将排序时间从线性对数级降低到了线性级别。
+
+### 系统中的排序
+
+Java 内置了一种排序方法——Arrays.sort()，这个方法使用两种排序方式共同实现。如果排序的是基本数据类型，就使用快速排序；如果排序的是对象，就使用归并排序。
+
+因为对于基本类型来说快速排序会使用更少的空间，而且更快；而归并排序能保证 NlogN 的时间复杂度，而且更加稳定。
+
+在视频的最后，老爷子强调对于不同的应用，要考虑的问题太多了，比如说并行、稳定等等，所以几乎每个重要的系统排序都有一个特定的高效算法，而且目前还有很多算法需要改进。
+
+最后附上前面提到过的排序方法的总结：
+
+![2](imgs/2.png)
 
 
 ## 编程作业：模式识别
