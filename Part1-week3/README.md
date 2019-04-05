@@ -172,8 +172,359 @@ public static Comparable select(Comparable[] a, int k) {
 快速排序将达到 N^2 除非 partition 过程停止的键值和结果键值相等，所以需要更好的算法实现，比较好的一种算法是 Dijkstra 三分法：
 
 
+
+
 ## 编程作业：模式识别
 
-给 n 个不同的点，找出所连最长的线段，每条线段至少包括四个点。
+给 n 个不同的点，找出所连线段，每条线段至少包括四个点。
+
+首先补充完成 Point 类，这部分主要是练习使用 Comparable 和 Comparator 制定排序规则，具体的排序规则文档中有详细的描述。
 
 
+```java
+public class Point implements Comparable<Point> {
+
+    private final int x;     // x-coordinate of this point
+    private final int y;     // y-coordinate of this point
+
+    /**
+     * Initializes a new point.
+     *
+     * @param  x the <em>x</em>-coordinate of the point
+     * @param  y the <em>y</em>-coordinate of the point
+     */
+    public Point(int x, int y) {
+        /* DO NOT MODIFY */
+        this.x = x;
+        this.y = y;
+    }
+
+    /**
+     * Draws this point to standard draw.
+     */
+    public void draw() {
+        /* DO NOT MODIFY */
+        StdDraw.point(x, y);
+    }
+
+    /**
+     * Draws the line segment between this point and the specified point
+     * to standard draw.
+     *
+     * @param that the other point
+     */
+    public void drawTo(Point that) {
+        /* DO NOT MODIFY */
+        StdDraw.line(this.x, this.y, that.x, that.y);
+    }
+
+    /**
+     * Returns the slope between this point and the specified point.
+     * Formally, if the two points are (x0, y0) and (x1, y1), then the slope
+     * is (y1 - y0) / (x1 - x0). For completeness, the slope is defined to be
+     * +0.0 if the line segment connecting the two points is horizontal;
+     * Double.POSITIVE_INFINITY if the line segment is vertical;
+     * and Double.NEGATIVE_INFINITY if (x0, y0) and (x1, y1) are equal.
+     *
+     * @param  that the other point
+     * @return the slope between this point and the specified point
+     */
+    public double slopeTo(Point that) {
+        /* YOUR CODE HERE */
+        if (that == null)
+            throw new NoSuchElementException();
+        if (this.x == that.x && this.y == that.y)
+            return Double.NEGATIVE_INFINITY;
+        else if (this.x == that.x)
+            return Double.POSITIVE_INFINITY;
+        else if (this.y == that.y)
+            return +0;
+        else
+            return (this.y - that.y) * 1.0 / (this.x - that.x);
+
+    }
+
+    /**
+     * Compares two points by y-coordinate, breaking ties by x-coordinate.
+     * Formally, the invoking point (x0, y0) is less than the argument point
+     * (x1, y1) if and only if either y0 < y1 or if y0 = y1 and x0 < x1.
+     *
+     * @param  that the other point
+     * @return the value <tt>0</tt> if this point is equal to the argument
+     *         point (x0 = x1 and y0 = y1);
+     *         a negative integer if this point is less than the argument
+     *         point; and a positive integer if this point is greater than the
+     *         argument point
+     */
+    public int compareTo(Point that) {
+        /* YOUR CODE HERE */
+        if (that == null)
+            throw new NoSuchElementException();
+        if (this.x == that.x && this.y == that.y)
+            return 0;
+        if (this.y < that.y || (this.y == that.y && this.x < that.x))
+            return -1;
+        return 1;
+    }
+
+    /**
+     * Compares two points by the slope they make with this point.
+     * The slope is defined as in the slopeTo() method.
+     *
+     * @return the Comparator that defines this ordering on points
+     */
+    public Comparator<Point> slopeOrder() {
+        /* YOUR CODE HERE */
+        return new SlopeCompare();
+    }
+
+    private class SlopeCompare implements Comparator<Point> {
+
+        @Override
+        public int compare(Point o1, Point o2) {
+            if (o1 == null || o2 == null)
+                throw new NoSuchElementException();
+            if (slopeTo(o1) == Double.NEGATIVE_INFINITY && slopeTo(o2) == Double.NEGATIVE_INFINITY)
+                return 0;
+            else if (slopeTo(o1) == Double.POSITIVE_INFINITY && slopeTo(o2) == Double.POSITIVE_INFINITY)
+                return 0;
+            else if (slopeTo(o1) == Double.POSITIVE_INFINITY && slopeTo(o2) == Double.NEGATIVE_INFINITY)
+                return 1;
+            else if (slopeTo(o1) == Double.NEGATIVE_INFINITY && slopeTo(o2) == Double.POSITIVE_INFINITY)
+                return -1;
+            else if (slopeTo(o1) - slopeTo(o2) > 0)
+                return 1;
+            else if (slopeTo(o1) - slopeTo(o2) < 0)
+                return -1;
+                // return slopeTo(o1) - slopeTo(o2) < 0 ? -1 : 1;
+            return 0;
+        }
+    }
+
+
+    /**
+     * Returns a string representation of this point.
+     * This method is provide for debugging;
+     * your program should not rely on the format of the string representation.
+     *
+     * @return a string representation of this point
+     */
+    public String toString() {
+        /* DO NOT MODIFY */
+        return "(" + x + ", " + y + ")";
+    }
+
+    /**
+     * Unit tests the Point data type.
+     */
+    public static void main(String[] args) {
+        /* YOUR CODE HERE */
+        Point p1 = new Point(0, 10);
+        Point p2 = new Point(10, 0);
+        System.out.println(p1.slopeTo(p2) == p2.slopeTo(p1));
+        Point p3 = new Point(0, 20);
+        System.out.println(p3.slopeOrder().compare(p1, p2));
+    }
+}
+```
+
+然后根据给出的点求所能组成的线段，线段只包含四个点，由两端的点表示，这个方法是暴力方法，4次方的时间复杂度。
+
+```java
+public class BruteCollinearPoints {
+
+    /** Record the linesegments */
+    private ArrayList<LineSegment> list;
+
+    /**
+     * find all line segments containing 4 points
+     * @param points
+     */
+    public BruteCollinearPoints(Point[] points) {
+        if (points == null)
+            throw new IllegalArgumentException();
+        for (Point p : points) {
+            if (p == null)
+                throw new IllegalArgumentException();
+        }
+        for (int i = 0; i < points.length - 1; i++) {
+            for (int j = i + 1; j < points.length; j++) {
+                if (points[i].compareTo(points[j]) == 0)
+                    throw new IllegalArgumentException();
+            }
+        }
+
+        list = new ArrayList<>();
+        int N = points.length;
+        for (int i = 0; i < N; i++) {
+            for (int j = i + 1; j < N; j++) {
+                for (int k = j + 1; k < N; k++) {
+                    for (int t = k + 1; t < N; t++) {
+                        if (points[i].slopeTo(points[j]) == points[i].slopeTo(points[k])
+                            && points[i].slopeTo(points[k]) == points[i].slopeTo(points[t]))
+                            addLineSegment(points, i, j, k, t);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Add the line segment to list
+     * @param points
+     * @param i
+     * @param j
+     * @param k
+     * @param t
+     */
+    private void addLineSegment(Point[] points, int i, int j, int k, int t) {
+        Point[] ps = new Point[]{points[i], points[j], points[k], points[t]};
+        Point min = ps[0], max = ps[0];
+        for (int index = 1; index < ps.length; index++) {
+            if (min.compareTo(ps[index]) > 0)
+                min = ps[index];
+            if (max.compareTo(ps[index]) < 0)
+                max = ps[index];
+        }
+        list.add(new LineSegment(min, max));
+    }
+
+    /**
+     * the number of line segments
+     * @return
+     */
+    public int numberOfSegments() {
+        return list.size();
+    }
+
+    /**
+     * the line segments
+     * @return
+     */
+    public LineSegment[] segments() {
+        LineSegment[] ans = new LineSegment[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            ans[i] = list.get(i);
+        }
+        return ans;
+    }
+
+
+
+    public static void main(String[] args) {
+
+    }
+}
+```
+
+然后实现高效算法，这里就需要使用前面提到的比较规则，先使用快排将点集排序，取最小的点跟其他点的斜率比，如果达到四个点及以上斜率相同，则记录到数组中。
+
+```java
+public class FastCollinearPoints {
+
+    /** Record the linesegments */
+    private ArrayList<LineSegment> list;
+
+    /**
+     * find all line segments containing 4 or more points
+     * @param points
+     */
+    public FastCollinearPoints(Point[] points) {
+        if (points == null)
+            throw new IllegalArgumentException();
+        for (Point p : points) {
+            if (p == null)
+                throw new IllegalArgumentException();
+        }
+        for (int i = 0; i < points.length - 1; i++) {
+            for (int j = i + 1; j < points.length; j++) {
+                if (points[i].compareTo(points[j]) == 0)
+                    throw new IllegalArgumentException();
+            }
+        }
+
+
+        list = new ArrayList<>();
+        int N = points.length;
+        Arrays.sort(points);
+
+        for (int i = 0; i < N - 1; i++) {
+            /** get the smallest point */
+            Arrays.sort(points);
+            Point min = points[i];
+            /** sort as the points' slope */
+            Arrays.sort(points, i, N, points[i].slopeOrder());
+
+            Point max = null;
+            int count = 0;
+
+            for (int j = i + 1; j < N - 1; j++) {
+                if (min.slopeTo(points[j]) == min.slopeTo(points[j + 1])) {
+                    count++;
+                    max = points[j + 1];
+                } else if (count != 2) {
+                    count = 0;
+                }
+                if (count >= 2) {
+                    count = 0;
+                    list.add(new LineSegment(min, max));
+                }
+            }
+        }
+    }
+
+
+    /**
+     * the number of line segments
+     * @return
+     */
+    public int numberOfSegments() {
+        return list.size();
+    }
+
+    /**
+     * the line segments
+     * @return
+     */
+    public LineSegment[] segments() {
+        LineSegment[] ans = new LineSegment[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            ans[i] = list.get(i);
+        }
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        In in = new In(args[0]);
+        int n = in.readInt();
+        Point[] points = new Point[n];
+        for (int i = 0; i < n; i++) {
+            int x = in.readInt();
+            int y = in.readInt();
+            points[i] = new Point(x, y);
+        }
+
+        StdDraw.enableDoubleBuffering();
+        StdDraw.setXscale(0, 32768);
+        StdDraw.setYscale(0, 32768);
+        for (Point p : points) {
+            p.draw();
+        }
+        StdDraw.show();
+
+        FastCollinearPoints collinear = new FastCollinearPoints(points);
+        for (LineSegment segment : collinear.segments()) {
+            StdOut.println(segment);
+            segment.draw();
+        }
+        StdDraw.show();
+    }
+
+}
+```
+
+这次作业目前只拿了88分，应该对于大规模的数据仍有不足。
+
+对了不得不说这门课的 PA 真的有趣：
+
+![1](imgs/1.png)
