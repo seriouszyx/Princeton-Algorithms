@@ -127,3 +127,330 @@ public class Heap {
 
 ![3](imgs/3.png)
 
+## 编程作业：8 Puzzle
+
+本次的作业是写一个游戏 AI，游戏即将一个无序的矩阵通过空白格的交换达到有序，如下图所示：
+
+```
+    1  3        1     3        1  2  3        1  2  3        1  2  3
+ 4  2  5   =>   4  2  5   =>   4     5   =>   4  5      =>   4  5  6
+ 7  8  6        7  8  6        7  8  6        7  8  6        7  8 
+
+ initial        1 left          2 up          5 left          goal
+```
+
+讲真这次的作业做了好久好久，主要是不理解一开始给出的算法，只能硬着头皮边实现 API 边理解文档，最后调 bug 又调了两个小时，总之感觉是目前接触到最难得一次吧。
+
+解决整个问题最核心的是 [A* search 算法](https://en.wikipedia.org/wiki/A*_search_algorithm)。每个矩阵都看作是一个搜索节点，一开始在 MinPQ 中插入所给的节点，然后删除最小的节点，并将最小节点的所有移动方法再插入到优先队列中，重复上述操作，直到队列中的最小节点有序。
+
+所谓最小，即整个矩阵的复杂度最小，有 Hamming 和 Manhattan 两种优先度算法。两种方法都要经过测试，不过真正实现的时候要用 Manhattan 算法。
+
+A* search 算法的操作可以想象成一棵博弈树，为了最终找到操作的过程，每个子节点还要存有父节点的引用。
+
+![4](imgs/4.png)
+
+还要考虑的一种情况是，所给的矩阵根本无法调整为有序。这里的算法一直都不是很懂，一开始将原始节点的两个位置互换创建伴随节点啊，然后进行和原始节点相同的操作，如果原始节点无解的话，那么伴随节点一定有解。有兴趣的可以看一下[这篇论文](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.19.1491)，给出了算法的证明。
+
+大致梳理了一下思路后，就没有什么难懂的地方了。
+
+Board 类主要就是记录输入数据，并实现比较规则以及一些生成方法供后续使用。
+
+```java
+public class Board {
+
+    private final char[] blocks;
+    private final int n;
+    private int blankPos;
+
+    /**
+     * construct a board from an n-by-n array of blocks
+     * @param blocks
+     */
+    public Board(int[][] blocks) {
+        if (blocks == null || blocks[0] == null)
+            throw new NullPointerException();
+        this.n = blocks.length;
+        this.blocks = new char[n * n + 1];
+        // 二维转一维
+        int index = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                this.blocks[++index] = (char) blocks[i][j];
+                if (this.blocks[index] == 0)
+                    this.blankPos = index;
+            }
+        }
+    }
+
+
+    /**
+     * board dimension n
+     * @return
+     */
+    public int dimension() {
+        return this.n;
+    }
+
+    /**
+     * number of blocks out of place
+     * @return
+     */
+    public int hamming() {
+        int count = 0, index = 0;
+        for (int i = 1; i < blocks.length; i++) {
+            index++;
+            if (blocks[index] != i && blocks[index] != 0)
+                count++;
+        }
+        return count;
+    }
+
+    /**
+     * sum of Manhattan distancces between blocks and goal
+     * @return
+     */
+    public int manhattan() {
+        int count = 0, index = 0;
+        for (int k = 1; k < blocks.length; k++) {
+            int value = blocks[++index];
+            if (value != 0) {
+                int correctPositionX = value % n == 0 ? value / n : value / n + 1,
+                        correctPositionY = (value % n == 0 ? n : value % n);
+                int currentPositionX = index % n == 0 ? index / n : index / n + 1,
+                        currentPositionY = (index % n == 0 ? n : index % n);
+                count += Math.abs(correctPositionX - currentPositionX) +
+                        Math.abs(correctPositionY - currentPositionY);
+                // System.out.println(
+                //         "current:(" + currentPositionX + ", " + currentPositionY + ")" +
+                //         "\tcorrect:(" + correctPositionX + ", " + correctPositionY + ")" +
+                //         "\tvalue: "+ value + "\tcount: " + count
+                // );
+            }
+        }
+        return count;
+    }
+
+    /**
+     * is this board the goal board?
+     * @return
+     */
+    public boolean isGoal() {
+        for (int i = 1; i < blocks.length - 2; i++)
+            if (blocks[i] > blocks[i + 1])
+                return false;
+        return true;
+    }
+
+    /**
+     * a board that is obtained by exchanging any pair of blocks
+     * @return
+     */
+    public Board twin() {
+        int index1 = -1, index2 = -1;
+        if (blocks[1] != 0 && blocks[2] != 0) {
+            index1 = 1;
+            index2 = 2;
+        } else {
+            index1 = n + 1;
+            index2 = n + 2;
+        }
+        return new Board(exchangeTwoEle(index1, index2));
+    }
+
+    /**
+     * exchange two elements and transfer to int[][]
+     * @param index1
+     * @param index2
+     * @return
+     */
+    private int[][] exchangeTwoEle(int index1, int index2) {
+        int[][] bs = new int[n][n];
+        int value1 = blocks[index1], value2 = blocks[index2];
+        int index = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                index++;
+                if (index == index1)
+                    bs[i][j] = value2;
+                else if (index == index2)
+                    bs[i][j] = value1;
+                else
+                    bs[i][j] = blocks[index];
+            }
+        }
+        return bs;
+    }
+
+    /**
+     * does this board equal y?
+     * @param y
+     * @return
+     */
+    public boolean equals(Object y) {
+        if (this == y)
+            return true;
+        if (y == null)
+            return false;
+        if (this.getClass() != y.getClass())
+            return false;
+        Board b = (Board) y;
+        if (!Arrays.equals(this.blocks, b.blocks))
+            return false;
+        if (this.n != b.n)
+            return false;
+        return true;
+
+    }
+
+    /**
+     * all neighboring boards
+     * @return
+     */
+    public Iterable<Board> neighbors() {
+        Stack<Board> stack = new Stack<>();
+        int index = blankPos;
+        if (index > n) {
+            // up
+            stack.push(new Board(exchangeTwoEle(index, index - n)));
+        }
+        if (index + n <= n * n) {
+            // down
+            stack.push(new Board(exchangeTwoEle(index, index + n)));
+        }
+        if (index > 0 && (index - 1) % n != 0) {
+            // left
+            stack.push(new Board(exchangeTwoEle(index, index - 1)));
+        }
+        if (index < n * n && (index + 1) % n != 1) {
+            // right
+            stack.push(new Board(exchangeTwoEle(index, index + 1)));
+        }
+
+        return stack;
+    }
+
+    /**
+     * string representation of this board (in the output format sprcified below)
+     * @return
+     */
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(n + "\n");
+        for (int i = 1; i <= n * n; i++) {
+            sb.append(String.format("%2d ", (int) blocks[i]));
+            if (i % n == 0)
+                sb.append("\n");
+        }
+        return sb.toString();
+    }
+}
+
+```
+
+Solver 类包含一个内部类，即搜索节点，它主要包括 Board 和移动次数等信息。构造函数实现了 A* search 算法，其余方法只是为了输出结果。
+
+```java
+public class Solver {
+
+    private final MinPQ<SearchNode> minPQ;
+    private final MinPQ<SearchNode> twins;
+
+
+    private class SearchNode implements Comparable<SearchNode> {
+
+        private final Board board;
+        private final int moves;
+        private final int priority;
+        private final SearchNode prevSearchNode;
+
+        public SearchNode(Board board, int moves, SearchNode prevSearchNode) {
+            this.board = board;
+            this.moves = moves;
+            this.priority = board.manhattan() + moves;
+            this.prevSearchNode = prevSearchNode;
+        }
+
+
+        @Override
+        public int compareTo(SearchNode sn) {
+            return this.priority - sn.priority;
+        }
+    }
+
+
+    /**
+     * find a solution to the initial board (using the A* algorithm)
+     * @param initial
+     */
+    public Solver(Board initial) {
+        if (initial == null)
+            throw new IllegalArgumentException();
+        this.minPQ = new MinPQ<>();
+        this.twins = new MinPQ<>();
+        minPQ.insert(new SearchNode(initial, 0, null));
+        twins.insert(new SearchNode(initial.twin(), 0, null));
+
+        /**
+         * 删最低，插相邻，重复，最后剩一个
+         */
+        while (!minPQ.min().board.isGoal() && !twins.min().board.isGoal()) {
+            SearchNode minSearchNode = minPQ.delMin();
+            SearchNode minTwins = twins.delMin();
+            for (Board b : minSearchNode.board.neighbors()) {
+                if (minSearchNode.moves == 0 || !b.equals(minSearchNode.prevSearchNode.board))
+                    minPQ.insert(new SearchNode(b, minSearchNode.moves + 1, minSearchNode));
+            }
+            for (Board b : minTwins.board.neighbors()) {
+                if (minTwins.moves == 0 || !b.equals(minTwins.prevSearchNode.board))
+                    twins.insert(new SearchNode(b, minTwins.moves + 1, minTwins));
+            }
+        }
+    }
+
+    /**
+     * is the initial board solvable?
+     * @return
+     */
+    public boolean isSolvable() {
+        if (minPQ.min().board.isGoal())
+            return true;
+        return false;
+    }
+
+    /**
+     * min number of moves to solve initial board; -1 if unsolvable
+     * @return
+     */
+    public int moves() {
+        if (!isSolvable())
+            return -1;
+        return minPQ.min().moves;
+    }
+
+    /**
+     * sequence if boards in a shortest solution; null if unsolvable
+     * @return
+     */
+    public Iterable<Board> solution() {
+        if (!isSolvable())
+            return null;
+        Stack<Board> stack = new Stack<>();
+        SearchNode current = minPQ.min();
+        while (current != null) {
+            stack.push(current.board);
+            current = current.prevSearchNode;
+        }
+        return stack;
+    }
+}
+```
+
+讲义中提到的几点优化一定要完成，效率会提高不少。还有一定要注意 Board 的输出格式，我就是少了个空格曾经一度得零分十几分。
+
+测试数据并不是很难，我本地 puzzle50 没跑出来不过提交似乎没测试这么大的数据。可见这个 Ai 的算法还是有局限性的，对于 4*4 以上的复杂情况很难算出来。
+
+最后部分数据超内存得了 95 分，下面上图感受一下曾经崩溃的心理。
+
+![5](imgs/5.png)
+
+幸亏不罚时。
