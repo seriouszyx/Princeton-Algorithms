@@ -127,6 +127,227 @@ public class Heap {
 
 ![3](imgs/3.png)
 
+## 符号表
+
+下面是符号表的 API。
+
+![6](imgs/6.png)
+
+### 位查找
+
+实现符号表最简单的方法是使用链表，不过插入和查找操作都需要遍历整个链表，复杂度为 N。
+
+因此我们可以使用两个数组实现，一个存储 key，一个存储 value，且存储是有序的。
+
+```java
+public Value get(Key key) {
+    if (isEmpty())
+        return null;
+    int i = rank(key);
+    if (i < N && keys[i].compareTo(key) == 0)
+        return vals[i];
+    else 
+        return null;
+}
+private int rank(Key key) {
+    int lo = 0, hi = N - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        int cmp = key.compareTo(keys[mid]);
+        if (cmp < 0)
+            hi = mid - 1;
+        else if (cmp > 0)
+            lo = mid + 1;
+        else 
+            return mid;
+    }
+    return lo;
+}
+```
+
+不过插入要移动数组元素。
+
+![7](imgs/7.png)
+
+### 二分查找树
+
+二分查找树实际上是一颗二叉树，节点上有值。父节点比所有左子节点上的元素大，比所有右子节点上的元素小。
+
+```java
+public class BST<Key extends Comparable<Key>, Value> {
+    private Node root;
+    
+    private class Node {
+        private Key key;
+        private Value val;
+        private Node left, right;
+        private int count;
+        public Node(Key key, Value val) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+    
+    public void put(Key key, Value val) {
+        root = put(root, key, val);
+    }
+    
+    private Node put(Node x, Key key, Value val) {
+        if (x == null)
+            return new Node(key, val);
+        int cmp = key.compareTo(x.key);
+        if (cmp < 0)
+            x.left = put(x.left, key, val);
+        else if (cmp > 0)
+            x.right = put(x.right, key, val);
+        else
+            x.val = val;
+        x.count = 1 + size(x.left) + size(x.right);
+        return x;
+    }
+    
+    public Value get(Key key) {
+        Node x = root;
+        while (x != null) {
+            int cmp = key.compareTo(x.key);
+            if (cmp < 0)
+                x = x.left;
+            else if (cmp > 0)
+                x = x.right;
+            else
+                return x.val;
+        }
+        return null;
+    }
+    
+    public int size() {
+        return size(root);
+    }
+    
+    private int size(Node x) {
+        if (x == null)
+            return 0;
+        return x.count;
+    }
+    
+    public Key min() {
+        return min(root).key;
+    }
+    
+    private Node min(Node x) {
+        if (x.left == null)
+            return x;
+        return min(x.left);
+    }
+    
+    public Key floor(Key key) {
+        Node x = floor(root, key);
+        if (x == null)
+            return null;
+        return x.key;
+    }
+    
+    private Node floor(Node x, Key key) {
+        if (x == null)
+            return null;
+        int cmp = key.compareTo(x.key);
+        if (cmp == 0)
+            return x;
+        if (cmp < 0)
+            return floor(x.left, key);
+        Node t = floor(x.right, key);
+        if (t != null)
+            return t;
+        else
+            return x;
+    }
+    
+    /** How many keys < k */
+    public int rank(Key key) {
+        return rank(key, root);
+    }
+    
+    private int rank(Key key, Node x) {
+        if (x == null)
+            return 0;
+        int cmp = key.compareTo(x.key);
+        if (cmp < 0)
+            return rank(key, x.left);
+        else if (cmp > 0)
+            return 1 + size(x.left) + rank(key, x.right);
+        else 
+            return rank(x.left); 
+    }
+    
+    public Iterator<Key> keys() {
+        Queue<Key> q = new Queue<>();
+        inorder(root, q);
+        return q;
+    }
+    
+    private void inorder(Node x, Queue<Key> q) {
+        if (x == null)
+            return;
+        inorder(x.left, q);
+        q.enqueue(x.key);
+        inorder(x.right, q);
+    }
+    
+    public void deleteMin() {
+        root = deleteMin(root);
+    }
+    
+    private Node deleteMin(Node x) {
+        if (x.left == null)
+            return x.right;
+        x.left = deleteMin(x.left);
+        x.count = 1 + size(x.left) + size(x.right);
+        return x;
+    }
+    
+    public void delete(Key key) {
+        root = delete(root, key);
+    }
+    
+    private Node delete(Node x, Key key) {
+        if (x == null) 
+            return null;
+        int cmp = key.compareTo(x.key);
+        if (cmp < 0)
+            x.left = delete(x.left, key);
+        else if (cmp > 0)
+            x.right = delete(x.right, key);
+        else {
+            if (x.right == null)
+                return x.left;
+            if (x.left == null)
+                return x.right;
+            
+            Node t = x;
+            x = min(t.right);
+            x.right = deleteMin(t.right);
+            x.left = t.left;
+        }
+        x.count = size(x.left) + size(x.right) + 2;
+        return x;
+    }
+}
+```
+
+BST 的效率跟插入元素的顺序有关，最差的情况是所有节点都在其父节点的右子树上。
+
+下面是二叉查找树各方法的效率：
+
+![8](imgs/8.png)
+
+下面是二叉查找树与之前数据结构的对比:
+
+
+![9](imgs/9.png)
+
+它的删除算法不算好，树的形状很容易偏向一侧，至今都没有什么好的解决办法。
+
+
 ## 编程作业：8 Puzzle
 
 本次的作业是写一个游戏 AI，游戏即将一个无序的矩阵通过空白格的交换达到有序，如下图所示：
