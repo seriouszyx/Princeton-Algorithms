@@ -20,7 +20,7 @@
 
 在开讲前老爷子说了这么一番话：
 
-    On a personal note, I wrote a research paper on this topic in 1979 with Leo Givas and we thought we pretty well understood these data structures at that time and people around the world use them in implementing various different systems. But just a few years ago for this course I found a much simpler implementation of red-black trees and this is just the a case study showing that there are simple algorithms still out there waiting to be discovered and this is one of them that we're going to talk about. 
+> On a personal note, I wrote a research paper on this topic in 1979 with Leo Givas and we thought we pretty well understood these data structures at that time and people around the world use them in implementing various different systems. But just a few years ago for this course I found a much simpler implementation of red-black trees and this is just the a case study showing that there are simple algorithms still out there waiting to be discovered and this is one of them that we're going to talk about. 
 
 没想到屏幕后的教授就是红黑树的作者之一，并且在准备这门课时又想出了一种更简单的实现方法。能有幸听到红黑树作者讲红黑树，这是一件多么幸福的事啊。
 
@@ -135,7 +135,7 @@ B 树和它的变形被广泛用于文件系统和数据库：
 
 最后老爷子讲到影视剧里也在谈论红黑树的梗，透着屏幕，你也能看得出他的骄傲和兴奋。
 
-     "A red black tree tracks every simple path from a node to a descendant leaf with the same number of black nodes."
+> "A red black tree tracks every simple path from a node to a descendant leaf with the same number of black nodes."
 
  
   
