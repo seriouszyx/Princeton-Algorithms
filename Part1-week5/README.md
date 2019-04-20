@@ -100,6 +100,43 @@ private Node put(Node h, Key key, Value val) {
 
 ![5](imgs/5.png)
 
+### B 树
 
+B 树是红黑树的一个实际应用。
 
+通常我们使用外部存储来存储大量的数据，如果想计算出定位到第一页数据的时间，就需要一个切实可行的文件系统模型，B 树就可以帮我们实现这一点。
+
+B 树的每个节点可以存储很多个键值。假设每个节点最多有 M-1 个键值，可以泛化出2-3个字树，则它只需满足以下几点：
+
+- 根节点至少有两个键值
+- 其他节点至少有 M/2 个键值
+- 外部节点包含 key 值
+- 内部结点包含 key 值得拷贝，以便指引查找
+
+![6](imgs/6.png)
+
+查找即依据索引一直查找到叶节点，插入也插入到叶节点需要时进行分裂。
+
+每页 M 个键的 B 树中搜索或者插入 N 个键需要的时间在 $ \log _{M-1} N $ 和 $ \log _{M/2} N $ 之间。即使是万亿级别的巨型文件，我们也可以在5-6次搜索中找到任何文件。
+
+平衡树的应用非常广泛，比如以下是红黑树的部分应用：
+
+- Java: java.util.TreeMap, java.util.TreeSet
+- C++ STL: map, multimap, multiset
+- Linux Kernel: completely fair scheduler, linux/rbtree.h
+- Emacs: conservative stack scanning
+
+B 树和它的变形被广泛用于文件系统和数据库：
+
+- Windows: NTFS
+- Mac: HFS, HFS+
+- Linux: ReiserFS, XFS, Ext3FS, JFS
+- Databases: ORACLE, DB2, INGERS, SQL, PostgreSQL
+
+最后老爷子讲到影视剧里也在谈论红黑树的梗，透着屏幕，你也能看得出他的骄傲和兴奋。
+
+     "A red black tree tracks every simple path from a node to a descendant leaf with the same number of black nodes."
+
+ 
+  
 
