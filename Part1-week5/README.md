@@ -14,6 +14,92 @@
 
 因为 2-3 树的平衡性很好，所以增删改查等操作仅仅需要 clgN 的时间复杂度。不过它太过复杂，需要考虑很多这种情况，所以并没有给出具体实现代码。我们有更好的解决方案。
 
+### 红黑树
+
+听到这几个字心情非常激动，大名鼎鼎的红黑树，无论是工作面试还是读研考试都会涉及到，而我一直畏惧没有接触。
+
+在开讲前老爷子说了这么一番话：
+
+    On a personal note, I wrote a research paper on this topic in 1979 with Leo Givas and we thought we pretty well understood these data structures at that time and people around the world use them in implementing various different systems. But just a few years ago for this course I found a much simpler implementation of red-black trees and this is just the a case study showing that there are simple algorithms still out there waiting to be discovered and this is one of them that we're going to talk about. 
+
+没想到屏幕后的教授就是红黑树的作者之一，并且在准备这门课时又想出了一种更简单的实现方法。能有幸听到红黑树作者讲红黑树，这是一件多么幸福的事啊。
+
+其实红黑树就是对 2-3 树的一种更简单的实现。即含有两个键值的节点，将较小的节点分为较大节点的左子树，两者连接部分用红色标记。
+
+![3](imgs/3.png)
+
+红黑树的 get()、floor() 等方法的实现跟普通的 BST 一样，只不过因为红黑树具有更好的平衡性，实际的操作速度会更快，在这里不进行详细的实现。
+
+下面是红黑树的私有成员，主要多了标记红黑的部分。
+
+![4](imgs/4.png)
+
+我们还需要实现一些私有类，便于插入删除等操作的实现。
+
+```java
+private Node rotateLeft(Node h) {
+    Node x = h.right;
+    h.right = x.left;
+    x.left = h;
+    x.color = h.color;
+    h.color = RED;
+    return x;
+}
+```
+
+有的时候红黑树会产生错误，即红色端链接在父节点的右分支上。上面的操作可以将子节点移动到左分支上。
+
+```java
+private Node rotateRight(Node h) {  
+    Node x = h.left;    
+    h.left = x.right;   
+    x.right = h;    
+    x.color = h.color;    
+    h.color = RED;    
+    return x; 
+}
+```
+
+在插入时，有的节点可能会产生三个键值，我们需要让子节点分裂，中间节点合并到父节点中，改变节点的颜色就可以完成这个操作。
+
+```java
+private void flipColors(Node h) {
+    h.color = RED;
+    h.left.color = BLACK;
+    h.right.color = BLACK;
+}
+```
+
+下面就是插入元素的过程，用到了以上三种实现，就是先将元素插入到正确的位置中，再调整树的节点颜色。听老师讲的挺魔幻的，有空再好好总结一下。
+
+```java
+private Node put(Node h, Key key, Value val) {
+    if (h == null)
+        return new Node(key, val, RED);
+    if (cmp < 0)
+        h.left = put(h.left, key, val);
+    else if (cmp > 0)
+        h.right = put(h.right, key, val);
+    else 
+        h.val = val;
+    
+    if (isRed(h.right) && !isRed(h.left))
+        h = rotateLeft(h);
+    if (isRed(h.left) && isRed(h.left.left))
+        h = rotateRight(h);
+    if (isRed(h.left) && isRed(h.right))
+        flipColors(h);
+        
+    return h;
+}
+```
+
+可以证明，红黑树的高度在最坏的情况下也不会超过 2lgN。
+
+下面是红黑树的各操作的效率，很惊人了。
+
+![5](imgs/5.png)
+
 
 
 
