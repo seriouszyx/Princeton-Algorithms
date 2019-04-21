@@ -137,6 +137,31 @@ B 树和它的变形被广泛用于文件系统和数据库：
 
 > "A red black tree tracks every simple path from a node to a descendant leaf with the same number of black nodes."
 
+## BST 的图形应用
+ 
+### 一维空间搜索
+
+ 它主要需要实现两个操作：
+ 
+ - 区间搜索: 寻找 k1 和 k2 之间的所有键
+ - 区间计数：统计 k1 和 k2 之间键的个数
+
+这个结构通常被用于数据库的查找中。
+ 
+一般用有序或者无序的数组存部分操作都会达到 N 复杂度，而显然使用普通的 BST 可以确保每个操作都是对数复杂度。就比如说下面这个区间统计的方法：
+ 
+ ```java
+ public int size(Key lo, Key hi) {
+    if (contains(hi))
+        return rank(hi) - rank(lo) + 1;
+    else
+        return rank(hi) - rank(lo);
+ }
+ ```
+ 
+ 下面是区间搜索的思路：
+ 
+ ![7](imgs/7.png)
  
   
 
