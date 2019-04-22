@@ -14,6 +14,8 @@ public class PointSET {
 
     private SET<Point2D> set;
 
+    private static final double RADIUS = 0.01;
+
     /**
      * construct an empty set of points
      */
@@ -44,8 +46,7 @@ public class PointSET {
     public void insert(Point2D p) {
         if (p == null)
             throw new IllegalArgumentException();
-        if (!set.contains(p))
-            set.add(p);
+        set.add(p);
     }
 
     /**
@@ -64,7 +65,7 @@ public class PointSET {
      */
     public void draw() {
         StdDraw.setPenColor(StdDraw.BLACK);
-        StdDraw.setPenRadius(0.01);
+        StdDraw.setPenRadius(RADIUS);
         for (Point2D p : set) {
             p.draw();
         }
@@ -97,11 +98,13 @@ public class PointSET {
             throw new IllegalArgumentException();
         if (isEmpty())
             return null;
-        Point2D res = null;
+        Point2D res = set.min();
         double min = Double.POSITIVE_INFINITY;
         for (Point2D point2D : set) {
-            if (p.distanceSquaredTo(point2D) <= min)
+            if (p.distanceSquaredTo(point2D) < min) {
                 res = p;
+                min = p.distanceSquaredTo(point2D);
+            }
         }
         return res;
     }

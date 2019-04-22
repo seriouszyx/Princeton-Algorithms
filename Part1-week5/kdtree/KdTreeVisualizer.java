@@ -19,6 +19,7 @@ public class KdTreeVisualizer {
         RectHV rect = new RectHV(0.0, 0.0, 1.0, 1.0);
         StdDraw.enableDoubleBuffering();
         KdTree kdtree = new KdTree();
+        // PointSET kdtree = new PointSET();
         while (true) {
             if (StdDraw.isMousePressed()) {
                 double x = StdDraw.mouseX();
@@ -29,7 +30,7 @@ public class KdTreeVisualizer {
                     StdOut.printf("%8.6f %8.6f\n", x, y);
                     kdtree.insert(p);
                     StdDraw.clear();
-                    // kdtree.draw();
+                    kdtree.draw();
                     StdDraw.show();
                 }
             }
