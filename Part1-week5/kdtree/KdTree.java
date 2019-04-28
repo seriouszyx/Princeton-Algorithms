@@ -84,7 +84,7 @@ public class KdTree {
         return n;
     }
 
-    
+
     public boolean contains(Point2D p) {
         Node current = root;
         while (current != null) {
